@@ -14,7 +14,7 @@ from app import models, app
 from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, assign_work, parse_date
+from app.utils import paginate, filter_query, create_zip, assign_work, parse_date, assign_submission
 
 from app.exceptions import *
 
@@ -430,18 +430,9 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
-        if submit:
-            group = user.groups(assignment.key)
-            members = group[0].members if (group and group[0]) else [user.key]
-            previous = models.Submission.query().filter(
-                models.Submission.submitter.IN(group.members))
-            previous = previous.get(keys_only=True)
-            if previous:
-                raise BadValueError(
-                    "Already have a final submission: {}".format(previous.id()))
-
         if not user.is_admin:
             submitter = user.key
+        # TODO - Choose member of group if the user is an admin. 
 
         db_messages = []
         for kind, message in messages.iteritems():
@@ -461,6 +452,7 @@ class SubmitNDBImplementation(object):
         if submit:
             submission.tags = [models.Submission.SUBMITTED_TAG]
         submission.put()
+        deferred.defer(assign_submission, submission.key.id())
 
         return submission
 
@@ -565,8 +557,12 @@ class SubmissionAPI(APIResource):
         if 'file_contents' not in messages:
             raise BadValueError("Submission has no contents to download")
         file_contents = messages['file_contents']
+        
+        try:
+            response = make_response(create_zip(file_contents))
+        except:
+            response = make_response(create_zip(file_contents.decode('utf-8')))
 
-        response = make_response(create_zip(file_contents))
         response.headers["Content-Disposition"] = (
             "attachment; filename=submission-%s.zip" % str(obj.created))
         response.headers["Content-Type"] = "application/zip"
@@ -658,6 +654,8 @@ class SubmissionAPI(APIResource):
             previous = previous.get(keys_only=True)
             if previous:
                 raise BadValueError("Only one final submission allowed")
+                # Why not remove the tag from previous submission? 
+                # previous.tags.remove(models.Submission.SUBMITTED_TAG)
 
         obj.tags.append(tag)
         obj.put()
@@ -700,6 +698,10 @@ class SubmissionAPI(APIResource):
     def submit(self, user, assignment, messages, submit, submitter=None):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
+
+        if submitter is None:
+            submitter = user.key
+
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, "success", {
