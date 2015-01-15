@@ -754,3 +754,24 @@ class FinalSubmission(Base):
             return True
 
         return False
+
+class Notification(Base):
+    """Represent a notification to be sent out to users"""
+    message = ndb.StringProperty(required=True)
+    users = ndb.KeyProperty(kind='User', repeated=True)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False
