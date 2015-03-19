@@ -1109,6 +1109,7 @@ class FinalSubmission(Base):
         # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
 
+
 class Receipts(Base):
     """
     Read receipts for notifications
@@ -1116,6 +1117,7 @@ class Receipts(Base):
     user = ndb.KeyProperty(User)
     notification = ndb.KeyProperty(Notification)
     read = ndb.BooleanProperty()
+
 
 class Notification(Base):
     """
