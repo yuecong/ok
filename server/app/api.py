@@ -1645,8 +1645,8 @@ class NotificationsAPI(APIResource):
         :return:
         """
         query = models.Notification.query(
-            # expiration < today()
-        )
+            models.Receipts.notification == models.Notification.id,
+            models.Notification.course == course.id)
 
         return list(query.fetch())
     
