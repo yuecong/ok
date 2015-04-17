@@ -22,26 +22,6 @@ indexes:
   - name: created
     direction: desc
 
-- kind: Backup
-  properties:
-  - name: messages.kind
-  - name: submitter
-  - name: created
-    direction: desc
-
-- kind: Backup
-  properties:
-  - name: submitter
-  - name: created
-    direction: desc
-
-- kind: Backupv2
-  properties:
-  - name: messages.kind
-  - name: submitter
-  - name: created
-    direction: desc
-
 - kind: Backupv2
   properties:
   - name: assignment
@@ -51,14 +31,16 @@ indexes:
 
 - kind: Backupv2
   properties:
+  - name: messages.kind
   - name: submitter
   - name: created
     direction: desc
 
-- kind: Comment
-  ancestor: yes
+- kind: Backupv2
   properties:
+  - name: submitter
   - name: created
+    direction: desc
 
 - kind: Commentv2
   ancestor: yes
@@ -106,36 +88,6 @@ indexes:
 - kind: Queuev2
   properties:
   - name: owner
-  - name: created
-    direction: desc
-
-- kind: Submission
-  properties:
-  - name: assignment
-  - name: created
-    direction: desc
-
-- kind: Submission
-  properties:
-  - name: assignment
-  - name: submitter
-  - name: created
-    direction: desc
-
-- kind: Submission
-  properties:
-  - name: messages.kind
-  - name: created
-    direction: desc
-
-- kind: Submission
-  properties:
-  - name: submitter
-  - name: created
-
-- kind: Submission
-  properties:
-  - name: submitter
   - name: created
     direction: desc
 
